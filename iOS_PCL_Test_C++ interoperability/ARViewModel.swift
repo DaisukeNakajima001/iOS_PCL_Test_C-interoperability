@@ -6,10 +6,6 @@
 import Foundation
 import SceneKit
 import ARKit
-
-import Foundation
-import SceneKit
-import ARKit
 import SwiftUI
 
 class ARViewModel: ObservableObject {
@@ -54,26 +50,22 @@ class ARViewModel: ObservableObject {
             }
 
         let objFilePath = documentsPath + "/mesh.obj"
+        // Swift 配列を C++ の std::vector に変換
+        pointCloud.withUnsafeBufferPointer { bufferPointer in
+            let cppPointCloud = StdVectorSIMD3(bufferPointer.baseAddress, bufferPointer.count)
 
-        let resultPath = pointCloud.withUnsafeBufferPointer { buffer -> String? in
-            objFilePath.withCString { pathPointer in
-                if let objPath = saveMeshAsOBJ(buffer.baseAddress!, Int32(pointCloud.count), pathPointer) {
-                    let filePath = String(cString: objPath)
-                    print("OBJ file saved at: \(filePath)")
-                    free(UnsafeMutablePointer(mutating: objPath)) // メモリ解放
-                    return filePath // 保存成功時のパスを返す
+            // Swift の String を C の const char* に変換
+            objFilePath.withCString { filePathCString in
+                var mesher = PCLMesher() // C++ クラスのインスタンス作成
+                let resultPath = mesher.saveMeshAsOBJWrapper(cppPointCloud, filePathCString) // メソッドを呼び出す
+
+                if resultPath.isEmpty {
+                    print("Mesh saving failed.")
                 } else {
-                    print("Failed to save OBJ file.")
-                    return nil // 保存失敗時はnilを返す
+                    print("Mesh saved successfully at: \(resultPath)")
+                    self.isMeshGenerated = true
                 }
             }
-        }
-
-        if let path = resultPath {
-            print("Mesh saved successfully at: \(path)")
-            self.isMeshGenerated = true
-        } else {
-            print("Mesh saving failed.")
         }
     }
     

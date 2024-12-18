@@ -5,10 +5,7 @@
 #define iOS_PCL_Test_C++ interoperability-Bridging-Header_h
 
 # include "PCLMesher.hpp"
-
-extern "C" {
-    const char* saveMeshAsOBJ(const simd_float3* pointCloud, int count, const char* filePath);
-}
+# include "SwiftStdVectorWrapper.hpp"
 
 
 #endif /* iOS_PCL_Test_C++ interoperability-Bridging-Header_h */
